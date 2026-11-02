@@ -1,3 +1,6 @@
+# Sampled days, YYYYMMDD: the Tuesday, Wednesday and Thursday of one mid-month week per month.
+# 108 days, January 2023 to December 2025, are the paper's window; the 18 days of January to June 2026
+# enter only the costs of origin-destination pairs that do not appear in 2023 (see the script header).
 20230117
 20230118
 20230119
@@ -106,3 +109,21 @@
 20251216
 20251217
 20251218
+20260113
+20260114
+20260115
+20260210
+20260211
+20260212
+20260317
+20260318
+20260319
+20260414
+20260415
+20260416
+20260512
+20260513
+20260514
+20260616
+20260617
+20260618
