@@ -50,7 +50,9 @@
 ## days). The pipeline also reads January to June 2026 (18 days; 126 in all)
 ## because, in the cost dictionary of sections 4-5, a pair that was not observed in
 ## 2023 takes the mean of all months in which it appears up to June 2026
-## (COST_LAST_MONTH). Three July 2026 days are listed as well and are read with
+## (COST_LAST_MONTH), and because, in the first step at actual travel times
+## (section 5), a pair of the fixed 2024 assignment that is not observed in a month
+## takes the same all-month mean time (ct_all). Three July 2026 days are listed as well and are read with
 ## LAST_MONTH=2026-07; they only add two Incheon districts created in that month,
 ## which are excluded from every estimate, and change no number. See the note at
 ## COST_LAST_MONTH and section 9, which quantifies the rule. (Checked: with
@@ -1999,6 +2001,11 @@ section(13, "Data record", "data_record.csv", {
   add("commuters on those pairs, % of all commuters (2025)", round(100 * x[ym >= "2025-01", sum(cnt[absent])] / x[ym >= "2025-01", sum(cnt)], 3))
   add("commuters on those pairs, % of Paju's commuters (2024-2025)", round(100 * x[o == PAJU, sum(cnt[absent])] / x[o == PAJU, sum(cnt)], 3))
   px <- fread(P("panel_xc.csv"), colClasses = list(character = "o"))[substr(o, 1, 2) != "11"]; px[, ev := ymn(ym) - ymn("2025-01")]
+  ## Paju's excess distance by calendar year (SI S3, 'The district was not filling faster')
+  pa <- px[o == PAJU & ym <= "2025-12", .(xs = mean((obs_d - min_d) / 1000)), by = .(yr = substr(ym, 1, 4))][order(yr)]
+  for (y in pa$yr) add(sprintf("Paju excess distance, step 1: annual mean, km (%s)", y), round(pa[yr == y, xs], 3))
+  add("Paju excess distance, step 1: change in annual mean, 2024 over 2023, %", round(100 * (pa[yr == "2024", xs] / pa[yr == "2023", xs] - 1), 2))
+  add("Paju excess distance, step 1: change in annual mean, 2025 over 2024, %", round(100 * (pa[yr == "2025", xs] / pa[yr == "2024", xs] - 1), 2))
   elig <- px[ev %in% -12:-1, .(bd = mean((obs_d - min_d) / 1000), bt = mean(obs_t - min_t)), by = o][bd > 0 & bt > 0, o]
   D45 <- c(PAJU, setdiff(intersect(unique(px$o), elig), TRT6))
   ## cell sizes and the largest district share, by window (the window matters in the third decimal)
@@ -2341,6 +2348,8 @@ section(15, "Paper values versus reproduced values", character(0), {
   num("Revision: SI S5 data record", "Monthly pair counts below 3 commuters, % of pairs (2024)", 3.9, getrec("monthly pair counts below 3 commuters, % of pairs (2024)"), 1)
   num("Revision: SI S5 data record", "Monthly pair counts below 3 commuters, % of commuters (2024)", 0.064, getrec("monthly pair counts below 3 commuters, % of commuters (2024)"), 3)
   num("Revision: SI S5 data record", "Smallest daily pair count, sampled days", 1.0, getrec("smallest daily pair count, sampled days"), 1)
+  num("Revision: SI S3 who is counted", "Paju excess distance, step 1: change in annual mean, 2024 over 2023, %", 0.6, getrec("Paju excess distance, step 1: change in annual mean, 2024 over 2023, %"), 1)
+  num("Revision: SI S3 who is counted", "Paju excess distance, step 1: change in annual mean, 2025 over 2024, %", 4.6, getrec("Paju excess distance, step 1: change in annual mean, 2025 over 2024, %"), 1)
   out <- rbindlist(chk); fwrite(out, P("paper_vs_repro.csv"))
   print(out[, .(where, quantity, paper, reproduced, difference, status)], nrows = 500, class = FALSE)
   cat(sprintf("\n    %d numbers checked: %d match, %d consistent with 'about', %d differ\n", nrow(out), out[status == "match", .N], out[status == "consistent", .N], out[status == "DIFFERENT", .N]))

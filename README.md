@@ -5,7 +5,7 @@ Code for *Does opening a regional express rail line increase excess commuting? E
 ## What is here
 
 - `replication_gtx_excess.R` — one R script in fifteen numbered sections. It downloads the sampled daily files from the Seoul Open Data Plaza, aggregates them to monthly origin–destination commuting flows, solves the transportation problem in two steps (margins held at their 2024 means; margins following each month), and computes the estimates, the bootstrap intervals and rank-based p values, the pre-opening trend checks, the uniqueness check of every optimal assignment and Paju's own lower bound, the sensitivity to pairs absent in 2023, the destination analysis and the data record. It draws Figure 1 and Figure S2. Its last section compares every number printed in the main text, in Figure 1 and in the Supplemental Information with the number it reproduces (`paper_vs_repro.csv`).
-- `sampled_days.txt` — the 126 sampled days. The 108 days of January 2023 to December 2025 (Tuesday to Thursday of one mid-month week per month) are the paper's window; the 18 days of January to June 2026 enter only the costs of origin–destination pairs that do not appear in 2023.
+- `sampled_days.txt` — the 126 sampled days. The 108 days of January 2023 to December 2025 (Tuesday to Thursday of one mid-month week per month) are the paper's window; the 18 days of January to June 2026 enter only the pair costs: the cost of pairs that do not appear in 2023, and the mean time that a pair of the fixed 2024 assignment takes in a month in which it is not observed (first step, actual travel times).
 
 ## Not included
 
@@ -31,4 +31,4 @@ A section is skipped when its output files already exist. The random seed (20260
 
 ## Checks
 
-On the test machine the script reproduced the 246 numbers printed in the main text, Figure 1 and the Supplemental Information: 242 exactly at the printed precision and the four "about" statements within their tolerance. Three days re-aggregated from the raw files matched the daily aggregates used for the paper cell for cell.
+On the test machine the script reproduced the 248 numbers printed in the main text, Figure 1 and the Supplemental Information: 244 exactly at the printed precision and the four "about" statements within their tolerance. Three days re-aggregated from the raw files matched the daily aggregates used for the paper cell for cell.
