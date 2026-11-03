@@ -41,9 +41,10 @@
 ## aggregate and deletes the zip. If you already hold the daily aggregates, set
 ## OD1_DIR to that folder and section 1 does nothing.
 ##
-## NOT INCLUDED. Figure 2, Figure S1 and Figure S3 are maps; they are drawn from
-## the same counts with separate mapping scripts that need boundary and
-## OpenStreetMap files; available on request.
+## NOT INCLUDED. Figure 2, Figure S1 and Figure S3 are maps drawn with separate
+## scripts that need boundary and OpenStreetMap files: Figure 2B and Figure S3 use
+## every Tuesday to Thursday outside holidays, not only the sampled days, and
+## Figure S1 uses resident registration data; available on request.
 ##
 ## SAMPLE MONTHS. The paper's estimates use January 2023 to December 2025 (108
 ## days). The pipeline also reads January to June 2026 (18 days; 126 in all)

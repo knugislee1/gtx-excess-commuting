@@ -9,7 +9,7 @@ Code for *Does opening a regional express rail line increase excess commuting? E
 
 ## Not included
 
-Figure 2, Figure S1 and Figure S3 are maps drawn from the same counts with separate scripts that need boundary and OpenStreetMap files; they are available from the authors on request. The population figures quoted from the Ministry of the Interior and Safety are not computed by the script.
+Figure 2, Figure S1 and Figure S3 are maps drawn with separate scripts that need boundary and OpenStreetMap files: Figure 2B and Figure S3 use every Tuesday to Thursday outside holidays, not only the sampled days, and Figure S1 uses resident registration data; the scripts are available from the authors on request. The population figures quoted from the Ministry of the Interior and Safety are not computed by the script.
 
 ## Data
 
