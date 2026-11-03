@@ -31,4 +31,4 @@ A section is skipped when its output files already exist. The random seed (20260
 
 ## Checks
 
-On the test machine the script reproduced the 239 numbers printed in the main text, Figure 1 and the Supplemental Information: 235 exactly at the printed precision and the four "about" statements within their tolerance. Three days re-aggregated from the raw files matched the daily aggregates used for the paper cell for cell.
+On the test machine the script reproduced the 246 numbers printed in the main text, Figure 1 and the Supplemental Information: 242 exactly at the printed precision and the four "about" statements within their tolerance. Three days re-aggregated from the raw files matched the daily aggregates used for the paper cell for cell.

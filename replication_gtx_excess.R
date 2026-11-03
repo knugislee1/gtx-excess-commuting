@@ -1440,15 +1440,18 @@ section(7, "Pre-opening trend, placebo opening date, last-six-months baseline", 
     win <- as.integer(w[-1]); d <- detr_m("2025-01", PAJ, plN, win); z <- sapply(plN, function(j) detr_m("2025-01", j, setdiff(plN, j), win))
     out[[paste0("step2_detrended", w[1])]] <- round(d, 3); out[[paste0("step2_detrended", w[1], "_rank")]] <- 1 + sum(z >= d)
     out[[paste0("step2_detrended", w[1], "_p")]] <- round((1 + sum(abs(z) >= abs(d))) / 45, 3)
+    c2 <- summary(lm(gap ~ ev, data = gM[ev %in% win]))$coefficients      # the second step's own drift (SI S2; main text "0.22 and 0.06")
+    out[[paste0("step2_slope", w[1])]] <- round(c2[2, 1], 6); out[[paste0("step2_slope", w[1], "_se")]] <- round(c2[2, 2], 4); out[[paste0("step2_slope", w[1], "_p")]] <- round(c2[2, 4], 4)   # slope to 6 decimals so that 0.224961 prints as 0.22
   }
   out$step2_did <- round(did_m, 3)
-  notes <- c(notes, sprintf("step 2: raw %+.3f | detrended 12m %+.3f (rank %d, p %.3f) | 24m %+.3f (rank %d, p %.3f)", did_m, out$step2_detrended12, out$step2_detrended12_rank,
-      out$step2_detrended12_p, out$step2_detrended24, out$step2_detrended24_rank, out$step2_detrended24_p))
+  notes <- c(notes, sprintf("step 2: raw %+.3f | detrended 12m %+.3f (rank %d, p %.3f) | 24m %+.3f (rank %d, p %.3f) | own drift 12m %.4f (SE %.4f, p %.3f), 24m %.4f (SE %.4f, p %.3f)",
+      did_m, out$step2_detrended12, out$step2_detrended12_rank, out$step2_detrended12_p, out$step2_detrended24, out$step2_detrended24_rank, out$step2_detrended24_p,
+      out$step2_slope12, out$step2_slope12_se, out$step2_slope12_p, out$step2_slope24, out$step2_slope24_se, out$step2_slope24_p))
   writeLines(notes, P("si_pretrend_notes.txt")); cat(notes, sep = "\n")
   ## index levels quoted in the text (comparison median and Paju, first and last pre-opening month, range of Paju over the year)
   fwrite(data.table(item = c("comparison_median_index_2024-01", "comparison_median_index_2024-12", "paju_index_2024-01", "paju_index_2024-12", "paju_index_min_2024", "paju_index_max_2024"),
                     value = c(ct[ev == -12, yc], ct[ev == -1, yc], gP[ev == -12, y], gP[ev == -1, y], gP[ev %in% -12:-1, min(y)], gP[ev %in% -12:-1, max(y)])), P("si_pretrend_levels.csv"))
-  jsonlite::write_json(out, P("si_pretrend.json"), auto_unbox = TRUE, pretty = TRUE)
+  jsonlite::write_json(out, P("si_pretrend.json"), auto_unbox = TRUE, pretty = TRUE, digits = NA)   # digits = NA: keep the stored precision (default 4 would round the step-2 slope to 0.225)
 })
 
 ## ---- 8. Uniqueness of every transportation-problem solution, and Paju's own lower bound -------------------------
@@ -1978,7 +1981,9 @@ section(13, "Data record", "data_record.csv", {
   add("zones used (origins)", length(zo), "426 Seoul dong + 52 districts outside Seoul; two Incheon districts created in 2026-07 are excluded")
   add("zones used: Seoul dong", sum(substr(zo, 1, 2) == "11")); add("zones used: districts outside Seoul", sum(substr(zo, 1, 2) != "11"))
   add("origin-destination cells per month (mean, 2023-2025)", round(nrow(w) / uniqueN(w$ym)))
-  add("smallest cell (three-day sum), 2023-2025", min(w$cnt))
+  add("smallest monthly pair count (three-day sum), 2023-2025", min(w$cnt))
+  dmin <- min(sapply(SAMPLE_DAYS, function(day) min(read_od1(od1_file(day))$cnt)))   # smallest pair count on one day (SI S5 'Cells')
+  add("smallest daily pair count, sampled days", dmin)
   add("within-zone commuting (o = d), % of commuters, all zones (2023-2025)", round(100 * sum(w[o == d, cnt]) / sum(w$cnt), 1))
   add("within-zone commuting, % of Paju's commuters (2024)", round(100 * dt[ym >= "2024-01" & ym <= "2024-12" & o == PAJU & d == PAJU, sum(cnt)] / dt[ym >= "2024-01" & ym <= "2024-12" & o == PAJU, sum(cnt)], 1))
   add("Paju within-zone cost in the dictionary: distance, km (2023 mean)", round(cost[o == PAJU & d == PAJU, cd23] / 1000, 2), "within-zone trips use the provider's reported distance and time like any other pair")
@@ -2000,8 +2005,8 @@ section(13, "Data record", "data_record.csv", {
   win <- list("2024" = c("2024-01", "2024-12"), "2025" = c("2025-01", "2025-12"), "2024-2025" = c("2024-01", "2025-12"))
   for (wn in names(win)) {
     ww <- dt[ym >= win[[wn]][1] & ym <= win[[wn]][2]]
-    add(sprintf("cells below 3 commuters, %% of cells (%s)", wn), round(100 * mean(ww$cnt < 3), 2))
-    add(sprintf("cells below 3 commuters, %% of commuters (%s)", wn), round(100 * sum(ww$cnt[ww$cnt < 3]) / sum(ww$cnt), 3))
+    add(sprintf("monthly pair counts below 3 commuters, %% of pairs (%s)", wn), round(100 * mean(ww$cnt < 3), 2))
+    add(sprintf("monthly pair counts below 3 commuters, %% of commuters (%s)", wn), round(100 * sum(ww$cnt[ww$cnt < 3]) / sum(ww$cnt), 3))
     xx <- x[ym >= win[[wn]][1] & ym <= win[[wn]][2] & o %chin% D45]
     mx <- xx[, .(s = 100 * sum(cnt[absent]) / sum(cnt)), by = o][order(-s)][1]
     add(sprintf("largest share of pairs absent in 2023 among the 45 districts, %% of the district's commuters (%s)", wn), round(mx$s, 3), paste("district", mx$o))
@@ -2242,6 +2247,8 @@ section(15, "Paper values versus reproduced values", character(0), {
   num("Revision: SI S2 trend", "Paju index, annual mean, 2023", 99.4, pj$paju_index_mean_2023, 1); num("Revision: SI S2 trend", "Paju index, annual mean, 2024", 100.0, pj$paju_index_mean_2024, 1); num("Revision: SI S2 trend", "Paju index, annual mean, 2025", 104.6, pj$paju_index_mean_2025, 1)
   num("Revision: SI S2 trend", "Comparison median slope per month, 2024", -0.34, pj$ctl_index_slope_2024, 2); num("Revision: SI S2 trend", "Comparison median slope per month, 2025", -0.27, pj$ctl_index_slope_2025, 2)
   num("Revision: SI S2 trend", "Paju slope per month, 2024", 0.03, pj$paju_index_slope_2024, 2); num("Revision: SI S2 trend", "Paju slope per month, 2025", 0.53, pj$paju_index_slope_2025, 2)
+  num("Revision: SI S2 trend", "Step 2, 12-month window: slope, points per month (also main text)", 0.22, pj$step2_slope12, 2); num("Revision: SI S2 trend", "Step 2, 12-month window: slope, SE", 0.13, pj$step2_slope12_se, 2); num("Revision: SI S2 trend", "Step 2, 12-month window: slope, p", 0.11, pj$step2_slope12_p, 2)
+  num("Revision: SI S2 trend", "Step 2, 24-month window: slope, points per month (also main text)", 0.06, pj$step2_slope24, 2); num("Revision: SI S2 trend", "Step 2, 24-month window: slope, SE", 0.05, pj$step2_slope24_se, 2); num("Revision: SI S2 trend", "Step 2, 24-month window: slope, p", 0.31, pj$step2_slope24_p, 2)
   ## ---- SI S2: the two time measures and the two steps read together --------------------------------------------------------
   num("SI S2 time", "Excess time at 2023 times, step 1: rank among 45 (largest)", 1, e1("xs_t23")$rank, 0)
   num("SI S2 time", "Excess time at actual times, step 1: rank among 45", 42, e1("xs_t")$rank, 0)
@@ -2331,8 +2338,9 @@ section(15, "Paper values versus reproduced values", character(0), {
   num("Revision: SI S5 data record", "Within-zone commuting, Paju, % of its commuters (2024)", 62.2, getrec("within-zone commuting, % of Paju's commuters (2024)"), 1)
   num("Revision: SI S5 data record", "Paju within-zone distance, km (2023 mean)", 5.73, getrec("Paju within-zone cost in the dictionary: distance, km (2023 mean)"), 2)
   num("Revision: SI S5 data record", "Paju within-zone time, minutes (2023 mean)", 29.0, getrec("Paju within-zone cost in the dictionary: time, min (2023 mean)"), 1)
-  num("Revision: SI S5 data record", "Cells below 3 commuters, % of cells (2024)", 3.9, getrec("cells below 3 commuters, % of cells (2024)"), 1)
-  num("Revision: SI S5 data record", "Cells below 3 commuters, % of commuters (2024)", 0.064, getrec("cells below 3 commuters, % of commuters (2024)"), 3)
+  num("Revision: SI S5 data record", "Monthly pair counts below 3 commuters, % of pairs (2024)", 3.9, getrec("monthly pair counts below 3 commuters, % of pairs (2024)"), 1)
+  num("Revision: SI S5 data record", "Monthly pair counts below 3 commuters, % of commuters (2024)", 0.064, getrec("monthly pair counts below 3 commuters, % of commuters (2024)"), 3)
+  num("Revision: SI S5 data record", "Smallest daily pair count, sampled days", 1.0, getrec("smallest daily pair count, sampled days"), 1)
   out <- rbindlist(chk); fwrite(out, P("paper_vs_repro.csv"))
   print(out[, .(where, quantity, paper, reproduced, difference, status)], nrows = 500, class = FALSE)
   cat(sprintf("\n    %d numbers checked: %d match, %d consistent with 'about', %d differ\n", nrow(out), out[status == "match", .N], out[status == "consistent", .N], out[status == "DIFFERENT", .N]))
